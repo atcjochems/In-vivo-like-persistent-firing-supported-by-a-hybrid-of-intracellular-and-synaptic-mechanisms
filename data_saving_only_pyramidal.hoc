@@ -1,0 +1,98 @@
+// Record cell voltage traces (Created by Varun. Modified by Moto)
+npcell = ncells
+//nicells = 0
+
+objref vpc[npcell]  // Vectors that record voltages from PC
+//objref vinh[nicells]  // Vectors that record voltages from INs
+objref extraParams[13]
+
+
+proc vrecord() {local i 
+
+  for i = 0, npcell-1 {
+	vpc[i] = new Vector()
+  }
+  //for i = 0, nicell-1 {
+	//vinh[i] = new Vector()
+  //}
+  
+  
+  
+  for i=0, npcell-1 {	// loop over possible PC cells
+
+      vpc[i].record(&PY[i].soma.v(0.5))
+	  //vpc[i].record(&cells.object(i).soma.v(0.5))
+	  //print vpc[i].record[0]
+	  //print PY[i].soma.v(0.5)
+	  //print vpc[0]
+      
+  }
+  //for i=npcell, cells.count-1 {	// loop over possible IN cells
+    //  vinh[i-npcell].record(&cells.object(i).soma.v(0.5))
+  //}
+  
+  for i = 0, 12 {
+	extraParams[i] = new Vector()
+  }
+  
+	extraParams[0].record(&PY[0].soma.cai(0.5))
+	extraParams[1].record(&PY[0].soma.gcan_ican(0.5))
+	extraParams[2].record(&El[0].stim.i)  // positive current injection
+	extraParams[3].record(&El[3].stim.i)  // negative current injection
+	extraParams[4].record(&netstim[0].i)  // sine wave
+
+	//extraParams[2].record(&stim.i)
+
+	//for i = 0, 12 {
+	//extraParams[i].record(&Exp2Syn[i].i)
+	//}
+}
+
+vrecord()
+
+
+objref fo, fi, fex
+
+proc vout() { local i
+	print "-- Saving voltage data"
+	// for excitatory neurons
+  	fo = new File("Result_data_vpc.dat")
+  	fo.wopen()
+	//print vpc.size
+  	for i=0, vpc.size-1 {	// loop over possible pyramidal cells
+      		fo.printf("%g\t%g\t%g\n", vpc[0].x[i], vpc[1].x[i], vpc[2].x[i])
+  	}
+  	fo.close()
+	
+	
+	//for interneurons
+  	//fi = new File("vinh.dat")
+  	
+  	//fi.wopen()
+  	//for i=0, vinh.size-1 {	// loop over possible inhibitory cells
+     // 		fi.printf("%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n", vinh[0].x[i], vinh[1].x[i], vinh[2].x[i], vinh[3].x[i], vinh[4].x[i], vinh[5].x[i], vinh[6].x[i], vinh[7].x[i], vinh[8].x[i])
+  	//}
+  	///fi.close()
+	
+	// Extra parameter recording
+	print "-- Saving other data"
+	fex = new File("Result_data_para.dat")
+	fex.wopen()
+	for i=0, extraParams.size-1 {
+			fex.printf("%g\t%g\t%g\n", extraParams[0].x[i], extraParams[1].x[i], extraParams[2].x[i] + extraParams[3].x[i] + extraParams[4].x[i])
+			//fex.printf("%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n", extraParams[0].x[i], extraParams[1].x[i], extraParams[2].x[i], extraParams[3].x[i], extraParams[4].x[i], extraParams[5].x[i], extraParams[6].x[i], extraParams[7].x[i], extraParams[8].x[i], extraParams[9].x[i], extraParams[10].x[i], extraParams[11].x[i], extraParams[12].x[i])
+	}
+	fex.close()
+	
+	print "--------   Finished data saving"
+}
+
+
+// panel for simulation results
+proc xspikeres() {
+  xpanel("Spike results")
+  xbutton("Write out", "vout()")
+  xpanel()
+}
+
+xspikeres()
